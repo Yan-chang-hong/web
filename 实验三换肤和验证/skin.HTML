@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>换肤进阶：二级菜单+批量绑定【修复鼠标移开消失】</title>
+    <style>
+        /* 默认白天样式 */
+        body {
+            background-color: #ffffff;
+            color: #111111;
+            transition: 0.3s all;
+        }
+        /* 夜间模式 */
+        body.night {
+            background-color: #222222;
+            color: #eeeeee;
+        }
+        /* 蓝色主题 */
+        body.blue {
+            background-color: #e8f4ff;
+            color: #0f2b48;
+        }
+        nav {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+        .skin-wrap {
+            position: relative;
+            display: inline-block;
+
+            padding-bottom:8px;
+        }
+        button {
+            padding: 8px 14px;
+            cursor: pointer;
+        }
+        /* 二级下拉菜单 */
+        .skin-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            padding-top:0px;
+            padding:6px 0;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            z-index: 999;
+        }
+        .skin-menu button {
+            display: block;
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: left;
+            padding: 6px 14px;
+        }
+        .skin-menu button:hover {
+            background: #eee;
+        }
+        /* 黑夜下菜单适配 */
+        body.night .skin-menu{
+            background:#333;
+            border-color:#555;
+        }
+        body.night .skin-menu button:hover{
+            background:#444;
+        }
+        body.blue .skin-menu{
+            background:#f6fbff;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="skin-wrap" id="skinWrap">
+            <button id="btnSkin">更换皮肤</button>
+            <div class="skin-menu" id="skinMenu">
+                <button data-theme="">默认白天</button>
+                <button data-theme="night">深色系</button>
+                <button data-theme="blue">蓝色系</button>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        const skinWrap = document.getElementById('skinWrap');
+        const skinMenu = document.getElementById('skinMenu');
+        const themeBtns = document.querySelectorAll('.skin-menu button');
+
+        //移入显示菜单
+        skinWrap.addEventListener('mouseenter', function(){
+            skinMenu.style.display = 'block';
+        })
+        //移出隐藏菜单
+        skinWrap.addEventListener('mouseleave', function(){
+            skinMenu.style.display = 'none';
+        })
+
+        // querySelectorAll + for循环批量绑定点击事件
+        for(let i = 0; i < themeBtns.length; i++){
+            themeBtns[i].onclick = function(){
+                //清除全部主题类名
+                document.body.classList.remove('night','blue');
+                const themeName = this.dataset.theme;
+                if(themeName){
+                    document.body.classList.add(themeName);
+                }
+                skinMenu.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

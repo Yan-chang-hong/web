@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>注册表单校验（按实验文档）</title>
+    <style>
+        body{
+            text-align: center;
+            margin-top:40px;
+        }
+        .item{
+            margin:16px 0;
+        }
+        label{
+            display:block;
+            width:520px;
+            margin:0 auto 4px;
+            text-align:left;
+            font-size:17px;
+        }
+        input{
+            width:520px;
+            padding:8px;
+            font-size:16px;
+        }
+        .tip{
+            display:block;
+            width:520px;
+            margin:2px auto 0;
+            text-align:left;
+            color:red;
+            font-size:14px;
+            min-height:18px;
+        }
+        button{
+            padding:6px 14px;
+            font-size:15px;
+            margin-top:8px;
+        }
+        #submitTip{
+            color:#008080;
+            font-size:16px;
+            margin-top:12px;
+        }
+    </style>
+</head>
+<body>
+    <h2>注册博客账号</h2>
+    <form id="regForm" onsubmit="return handleSubmit(event)">
+        <div class="item">
+            <label>用户名</label>
+            <input type="text" id="username" onfocus="userFocus()" onblur="userBlur()">
+            <span class="tip" id="tipUser"></span>
+        </div>
+        <div class="item">
+            <label>邮箱</label>
+            <input type="text" id="email" onfocus="emailFocus()" onblur="emailBlur()">
+            <span class="tip" id="tipEmail"></span>
+        </div>
+        <div class="item">
+            <label>手机号码</label>
+            <input type="text" id="phone" onfocus="phoneFocus()" onblur="phoneBlur()">
+            <span class="tip" id="tipPhone"></span>
+        </div>
+        <div class="item">
+            <label>密码</label>
+            <input type="password" id="pwd" onfocus="pwdFocus()" onblur="pwdBlur()">
+            <span class="tip" id="tipPwd"></span>
+        </div>
+        <div class="item">
+            <label>确认密码</label>
+            <input type="password" id="pwd2" onfocus="pwd2Focus()" onblur="pwd2Blur()">
+            <span class="tip" id="tipPwd2"></span>
+        </div>
+        <button type="submit">提交注册</button>
+        <p id="submitTip"></p>
+    </form>
+
+<script>
+const regUser = /^\w{4,12}$/;
+const regPhone = /^1\d{10}$/;
+const regEmail = /^[a-zA-Z0-9_\-.]+@[a-zA-Z0-9\-]+\.[a-zA-Z0-9\-.]+$/;
+const regPwd = /^\S{6,20}$/;
+
+function clearAllTip(){
+    document.getElementById('tipUser').innerText = '';
+    document.getElementById('tipEmail').innerText = '';
+    document.getElementById('tipPhone').innerText = '';
+    document.getElementById('tipPwd').innerText = '';
+    document.getElementById('tipPwd2').innerText = '';
+    document.getElementById('submitTip').innerText = '';
+}
+
+//用户名
+function userFocus(){
+    document.getElementById('tipUser').innerText = '用户名：4~12位，只能是字母、数字、下划线';
+}
+function userBlur(){
+    const val = document.getElementById('username').value.trim();
+    if(!val){
+        document.getElementById('tipUser').innerText = '此项不能为空';
+    }else if(!regUser.test(val)){
+        document.getElementById('tipUser').innerText = '格式错误，用户名需要4~12位字母数字下划线';
+    }else{
+        document.getElementById('tipUser').innerText = '';
+    }
+}
+
+//邮箱
+function emailFocus(){
+    document.getElementById('tipEmail').innerText = '邮箱格式示例：xxx@xxx.com';
+}
+function emailBlur(){
+    const val = document.getElementById('email').value.trim();
+    if(!val){
+        document.getElementById('tipEmail').innerText = '此项不能为空';
+    }else if(!regEmail.test(val)){
+        document.getElementById('tipEmail').innerText = '邮箱格式不正确';
+    }else{
+        document.getElementById('tipEmail').innerText = '';
+    }
+}
+
+//手机号
+function phoneFocus(){
+    document.getElementById('tipPhone').innerText = '手机号：11位，以1开头';
+}
+function phoneBlur(){
+    const val = document.getElementById('phone').value.trim();
+    if(!val){
+        document.getElementById('tipPhone').innerText = '此项不能为空';
+    }else if(!regPhone.test(val)){
+        document.getElementById('tipPhone').innerText = '手机号格式错误，必须是11位手机号';
+    }else{
+        document.getElementById('tipPhone').innerText = '';
+    }
+}
+
+//密码
+function pwdFocus(){
+    document.getElementById('tipPwd').innerText = '密码：6~20位，不能包含空格';
+}
+function pwdBlur(){
+    const val = document.getElementById('pwd').value.trim();
+    if(!val){
+        document.getElementById('tipPwd').innerText = '此项不能为空';
+    }else if(!regPwd.test(val)){
+        document.getElementById('tipPwd').innerText = '密码长度6~20位，不能有空格';
+    }else{
+        document.getElementById('tipPwd').innerText = '';
+    }
+}
+
+//确认密码
+function pwd2Focus(){
+    document.getElementById('tipPwd2').innerText = '再次输入密码，保证两次密码一致';
+}
+function pwd2Blur(){
+    const val = document.getElementById('pwd2').value.trim();
+    const pwdVal = document.getElementById('pwd').value.trim();
+    if(!val){
+        document.getElementById('tipPwd2').innerText = '此项不能为空';
+    }else if(val !== pwdVal){
+        document.getElementById('tipPwd2').innerText = '两次输入的密码不一致';
+    }else{
+        document.getElementById('tipPwd2').innerText = '';
+    }
+}
+
+//表单提交
+function handleSubmit(event){
+    event.preventDefault();
+    clearAllTip();
+    let isAllOk = true;
+
+    const u = document.getElementById('username').value.trim();
+    const emailVal = document.getElementById('email').value.trim();
+    const ph = document.getElementById('phone').value.trim();
+    const p1 = document.getElementById('pwd').value.trim();
+    const p2 = document.getElementById('pwd2').value.trim();
+
+    if(!u || !regUser.test(u)){
+        document.getElementById('tipUser').innerText = u ? '格式错误，用户名需要4~12位字母数字下划线' : '此项不能为空';
+        isAllOk = false;
+    }
+    if(!emailVal || !regEmail.test(emailVal)){
+        document.getElementById('tipEmail').innerText = emailVal ? '邮箱格式不正确' : '此项不能为空';
+        isAllOk = false;
+    }
+    if(!ph || !regPhone.test(ph)){
+        document.getElementById('tipPhone').innerText = ph ? '手机号格式错误，必须是11位手机号' : '此项不能为空';
+        isAllOk = false;
+    }
+    if(!p1 || !regPwd.test(p1)){
+        document.getElementById('tipPwd').innerText = p1 ? '密码长度6~20位，不能有空格' : '此项不能为空';
+        isAllOk = false;
+    }
+    if(!p2 || p2 !== p1){
+        document.getElementById('tipPwd2').innerText = p2 ? '两次输入的密码不一致' : '此项不能为空';
+        isAllOk = false;
+    }
+
+    if(isAllOk){
+        document.getElementById('submitTip').style.color = 'green';
+        document.getElementById('submitTip').innerText = ' 全部校验通过，注册信息合法！';
+        const formData = {username:u,email:emailVal,phone:ph,password:p1};
+        console.log('表单数据：',formData);
+    }else{
+        document.getElementById('submitTip').style.color = '#008080';
+        document.getElementById('submitTip').innerText = ' 请根据提示修改后再提交。';
+    }
+}
+</script>
+</body>
+</html>

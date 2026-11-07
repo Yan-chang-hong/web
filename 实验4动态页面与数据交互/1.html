@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>个人博客</title>
+    <style>
+        *{
+            box-sizing: border-box;
+        }
+        body{
+            max-width:900px;
+            margin:30px auto;
+            padding:0 20px;
+        }
+        .article-card{
+            border:1px solid #ccc;
+            padding:16px;
+            margin:12px 0;
+            border-radius:6px;
+        }
+        .meta{
+            color:#666;
+            font-size:14px;
+        }
+        /*搜索区域*/
+        .search-area{
+            margin:20px 0;
+            padding:16px;
+            border:1px solid #ccc;
+            border-radius:6px;
+        }
+        .search-area input{
+            width:100%;
+            padding:8px;
+            margin-bottom:10px;
+        }
+        button{
+            padding:6px 14px;
+            cursor:pointer;
+        }
+        /*留言区域*/
+        .msg-area{
+            margin-top:40px;
+        }
+        .msg-item{
+            border:1px solid #aaa;
+            padding:10px;
+            margin:8px 0;
+            border-radius:4px;
+        }
+        .msg-name{
+            font-weight:bold;
+            margin-bottom:4px;
+        }
+        .msg-form input,.msg-form textarea{
+            width:100%;
+            padding:8px;
+            margin:6px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>个人博客</h1>
+    <h3>我的文章</h3>
+    <!--搜索模块-->
+    <div class="search-area">
+        <label>关键词</label>
+        <input type="text" id="searchInput" placeholder="例如：HTML">
+        <div>
+            <button id="searchBtn">搜索</button>
+            <button id="resetBtn">重置</button>
+        </div>
+    </div>
+
+    <!--文章列表 -->
+    <p id="article-count"></p>
+    <div id="article-list"></div>
+
+    <!--留言板块-->
+    <div class="msg-area">
+        <h3>给博主留言</h3>
+        <form class="msg-form" id="msgForm">
+            <label>昵称（1~20字）</label>
+            <input type="text" id="nickname" placeholder="例如：小林">
+            <label>留言内容（1~300字）</label>
+            <textarea id="msgContent" rows="4" placeholder="写下你的学习问题或建议"></textarea>
+            <button type="submit">发表留言</button>
+        </form>
+        <p id="msg-count"></p>
+        <div id="message-list"></div>
+    </div>
+
+<script>
+//========1、模拟文章数据 ========
+const articles = [
+    {
+        title: "我的第一篇博客",
+        date: "2026-09-01",
+        summary: "用文字记录学习与生活，从一个小小的开始。"
+    },
+    {
+        title: "用HTML搭建文章结构",
+        date: "2026-09-03",
+        summary: "先让内容有清晰的结构，再考虑页面的外观。"
+    },
+    {
+        title: "中秋节的月饼",
+        date: "2026-09-25",
+        summary: "月饼甜甜，生活也甜甜蜜蜜。"
+    },
+    {
+        title: "我的JavaScript复习计划",
+        date: "2026-09-28",
+        summary: "每天完成一个小练习，再用自己的话说出来。"
+    }
+];
+
+//========2、留言数组 存储留言对象 messageId、用户名、留言内容========
+let messages = [];
+
+//========本地存储工具函数========
+//保存到本地
+function saveToLocal(key,value){
+    const str = JSON.stringify(value);
+    localStorage.setItem(key,str);
+}
+//从本地读取
+function getFromLocal(key){
+    const str = localStorage.getItem(key);
+    if(str){
+        return JSON.parse(str);
+    }else{
+        return [];
+    }
+}
+
+//========文章渲染函数 renderData() 模板字符串 + innerHTML========
+function renderData(arr){
+    const countDom = document.getElementById('article-count');
+    const listDom = document.getElementById('article-list');
+    //显示文章数量
+    countDom.innerText = `共 ${arr.length} 篇文章`;
+
+    if(arr.length === 0){
+        listDom.innerHTML = "<p>暂无文章数据</p>";
+        return;
+    }
+    let html = '';
+    for(let i = 0;i < arr.length;i++){
+        const art = arr[i];
+        //模板字符串 ${}插值
+        html += `
+        <article class="article-card">
+            <div class="meta">
+                <time>${art.date}</time>
+            </div>
+            <h2>${art.title}</h2>
+            <p>${art.summary}</p>
+        </article>
+        `
+    }
+    listDom.innerHTML = html;
+}
+
+//========留言渲染 renderMessage() 【createElement + append 】========
+function renderMessage(){
+    const countDom = document.getElementById('msg-count');
+    const listDom = document.getElementById('message-list');
+    //清空旧DOM
+    listDom.innerHTML = '';
+    countDom.innerText = `共 ${messages.length} 条留言`;
+
+    for(let i = 0; i < messages.length; i++){
+        const item = messages[i];
+        //创建外层div
+        const divItem = document.createElement('div');
+        divItem.className = 'msg-item';
+
+        const nameDom = document.createElement('div');
+        nameDom.className = 'msg-name';
+        nameDom.textContent = item.nickname;
+
+        const contentDom = document.createElement('p');
+        contentDom.textContent = item.content;
+
+        //append追加节点
+        divItem.append(nameDom);
+        divItem.append(contentDom);
+        listDom.append(divItem);
+    }
+}
+
+//========页面加载初始化========
+window.onload = function(){
+    //1渲染全部文章
+    renderData(articles);
+    //2读取本地留言，刷新页面恢复留言
+    messages = getFromLocal("blogMessage");
+    renderMessage();
+}
+
+//========搜索功能 filter()========
+const searchBtn = document.getElementById('searchBtn');
+const resetBtn = document.getElementById('resetBtn');
+const searchInput = document.getElementById('searchInput');
+
+searchBtn.addEventListener('click',function(){
+    const keyword = searchInput.value.trim().toLowerCase();
+    //filter过滤标题包含关键词
+    const result = articles.filter(function(art){
+        return art.title.toLowerCase().includes(keyword);
+    })
+    renderData(result);
+})
+
+resetBtn.addEventListener('click',function(){
+    searchInput.value = '';
+    renderData(articles);
+})
+
+//========留言表单提交事件========
+const msgForm = document.getElementById('msgForm');
+msgForm.addEventListener('submit',function(event){
+    event.preventDefault(); //阻止表单默认提交
+
+    const nick = document.getElementById('nickname').value.trim();
+    const content = document.getElementById('msgContent').value.trim();
+
+    //校验：昵称1‑20字，留言1‑300字
+    if(nick.length <1 || nick.length>20){
+        alert("昵称长度1~20个字符");
+        return;
+    }
+    if(content.length <1 || content.length>300){
+        alert("留言内容长度1~300个字符");
+        return;
+    }
+
+    //构造留言对象，生成唯一messageId
+    const msgObj = {
+        messageId: Date.now(),
+        nickname:nick,
+        content:content
+    }
+    messages.push(msgObj);
+
+    //保存到本地存储
+    saveToLocal("blogMessage",messages);
+
+    //渲染留言
+    renderMessage();
+
+    //清空输入框
+    document.getElementById('nickname').value='';
+    document.getElementById('msgContent').value='';
+})
+</script>
+</body>
+</html>
