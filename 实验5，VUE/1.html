@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>个人博客-Vue重构</title>
+    <!--引入Vue3 CDN-->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.44/dist/vue.global.js"></script>
+    <style>
+        *{
+            box-sizing: border-box;
+        }
+        body{
+            max-width:900px;
+            margin:30px auto;
+            padding:0 20px;
+        }
+        .article-card{
+            border:1px solid #ccc;
+            padding:16px;
+            margin:12px 0;
+            border-radius:6px;
+        }
+        .meta{
+            color:#666;
+            font-size:14px;
+        }
+        /*搜索区域*/
+        .search-area{
+            margin:20px 0;
+            padding:16px;
+            border:1px solid #ccc;
+            border-radius:6px;
+        }
+        .search-area input{
+            width:100%;
+            padding:8px;
+            margin-bottom:10px;
+        }
+        button{
+            padding:6px 14px;
+            cursor:pointer;
+        }
+        /*留言区域*/
+        .msg-area{
+            margin-top:40px;
+        }
+        .msg-item{
+            border:1px solid #aaa;
+            padding:10px;
+            margin:8px 0;
+            border-radius:4px;
+        }
+        .msg-name{
+            font-weight:bold;
+            margin-bottom:4px;
+        }
+        .msg-form input,.msg-form textarea{
+            width:100%;
+            padding:8px;
+            margin:6px 0;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <h1>个人博客</h1>
+    <h3>我的文章</h3>
+    <!-- =========标题搜索模块 ========= -->
+    <div class="search-area">
+        <label>标题关键词</label>
+        <input type="text" v-model="keyword" placeholder="例如：HTML">
+        <p>当前关键词：{{ keyword }}</p>
+        <div>
+            <button @click="resetSearch">重置筛选</button>
+        </div>
+    </div>
+    <!--文章计数，使用过滤后的数组长度-->
+    <p id="article-count">显示 {{ filteredArticles.length }} / 共 {{ articles.length }} 篇文章</p>
+    <!--无搜索结果提示-->
+    <p v-if="filteredArticles.length === 0" class="search-area">没有找到相关文章，请更换关键词。</p>
+    <!-- =========博文列表 v-for渲染 ========= -->
+    <div id="article-list">
+        <article v-for="article in filteredArticles" :key="article.id" class="article-card">
+            <div class="meta">
+                <time>{{ article.date }}</time>
+            </div>
+            <h2>{{ article.title }}</h2>
+            <p>{{ article.summary }}</p>
+        </article>
+    </div>
+    <!-- =========留言板块 ========= -->
+    <div class="msg-area">
+        <h3>给博主留言</h3>
+        <!-- .prevent阻止表单默认提交行为 -->
+        <form class="msg-form" @submit.prevent="addMessage">
+            <label>昵称（1~20字）</label>
+            <input ref="nicknameInput" v-model="nickname" type="text" placeholder="例如：小林">
+            <label>留言内容（1~300字）</label>
+            <textarea v-model="content" rows="4" placeholder="写下你的学习问题或建议"></textarea>
+            <button type="submit">发表留言</button>
+        </form>
+        <p>共 {{ messages.length }} 条留言</p>
+        <p v-if="messages.length === 0">还没有留言，来写第一条吧。</p>
+        <div id="message-list">
+            <div class="msg-item" v-for="msg in messages" :key="msg.messageId">
+                <div class="msg-name">{{ msg.nickname }}</div>
+                <p>{{ msg.content }}</p>
+                <button @click="deleteMessage(msg.messageId)">删除留言</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+//模拟博文数据，补充id字段，用于v-for的key
+const blogArticles = [
+    {
+        id:1,
+        title: "我的第一篇博客",
+        date: "2026-09-01",
+        summary: "用文字记录学习与生活，从一个小小的开始。"
+    },
+    {
+        id:2,
+        title: "用HTML搭建文章结构",
+        date: "2026-09-03",
+        summary: "先让内容有清晰的结构，再考虑页面的外观。"
+    },
+    {
+        id:3,
+        title: "中秋节的月饼",
+        date: "2026-09-25",
+        summary: "月饼甜甜，生活也甜甜蜜蜜。"
+    },
+    {
+        id:4,
+        title: "我的JavaScript复习计划",
+        date: "2026-09-28",
+        summary: "每天完成一个小练习，再用自己的话说出来。"
+    }
+];
+const { createApp } = Vue;
+createApp({
+    data() {
+        return {
+            articles: blogArticles,
+            keyword: "",     //搜索关键词 v-model双向绑定
+            nickname:"",     //留言昵称
+            content:"",      //留言内容
+            messages:[]      //留言数组
+        }
+    },
+    //页面挂载完毕，读取本地存储留言
+    mounted(){
+        const str = localStorage.getItem("blogMessage");
+        if(str){
+            this.messages = JSON.parse(str);
+        }
+    },
+    computed:{
+        //todo 根据关键字筛选博文
+        filteredArticles(){
+            if(!this.keyword.trim()){
+                //关键词为空，返回全部文章
+                return this.articles;
+            }
+            let kw = this.keyword.toLowerCase().trim();
+            return this.articles.filter( art=>{
+                return art.title.toLowerCase().includes(kw);
+            })
+        }
+    },
+    watch:{
+        //todo 监听关键词变化
+        keyword(newValue){
+            console.log("关键词更新：",newValue);
+        }
+    },
+    methods:{
+        //保存留言到本地存储
+        saveMsgLocal(){
+            localStorage.setItem("blogMessage", JSON.stringify(this.messages));
+        },
+        //todo：重置搜索
+        resetSearch(){
+            this.keyword = "";
+        },
+        //新增留言
+        addMessage(){
+            //校验昵称、留言长度
+            const nick = this.nickname.trim();
+            const cont = this.content.trim();
+            if(nick.length<1 || nick.length>20){
+                alert("昵称长度1~20个字符");
+                return;
+            }
+            if(cont.length<1 || cont.length>300){
+                alert("留言内容长度1~300个字符");
+                return;
+            }
+            //组装留言对象
+            const newMsg = {
+                messageId: Date.now(),
+                nickname:nick,
+                content:cont
+            };
+            this.messages.push(newMsg);
+            // 新增后保存本地
+            this.saveMsgLocal();
+
+            //清空输入框
+            this.nickname = "";
+            this.content = "";
+            //ref获取DOM，昵称输入框获取焦点
+            this.$refs.nicknameInput.focus();
+        },
+        //删除留言，过滤掉对应id
+        deleteMessage(delId){
+            this.messages = this.messages.filter(item=> item.messageId !== delId);
+            // 删除后也要更新本地存储
+            this.saveMsgLocal();
+        }
+    }
+}).mount("#app");
+</script>
+</body>
+</html>
